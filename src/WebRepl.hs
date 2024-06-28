@@ -6,7 +6,6 @@ import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString, fromString)
 import Flow
 import Network.HTTP.Req
-import Network.URI
 import StringMap
 import System.Console.Isocline (readline)
 

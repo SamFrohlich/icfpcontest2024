@@ -84,6 +84,7 @@ library
                       network-uri,
                       req,
                       utf8-string,
+                      QuickCheck,
                       extra
 
     -- Directories containing source files.
