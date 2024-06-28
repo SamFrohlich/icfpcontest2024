@@ -13,10 +13,13 @@ import System.Console.Isocline (readline)
 repl :: IO ()
 repl = do
   msg <- readline "icfp"
-  putStrLn ""
-  putStrLn "Response:"
-  sendMessage msg
-  repl
+  case msg of
+    ":q" -> pure ()
+    _    -> do
+      putStrLn ""
+      putStrLn "Response:"
+      sendMessage msg
+      repl
 
 sendMessage :: String -> IO ()
 -- You can either make your monad an instance of 'MonadHttp', or use
