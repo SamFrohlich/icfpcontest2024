@@ -78,7 +78,11 @@ library
                       bimap,
                       bytestring,
                       containers,
-                      req
+                      flow,
+                      isocline,
+                      network-uri,
+                      req,
+                      utf8-string
 
     -- Directories containing source files.
     hs-source-dirs:   src
