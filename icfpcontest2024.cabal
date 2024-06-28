@@ -91,6 +91,7 @@ library
                       req,
                       utf8-string,
                       QuickCheck,
+                      HList,
                       extra
 
     -- Directories containing source files.
