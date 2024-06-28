@@ -5,6 +5,7 @@ import Data.List.Extra (minimumOn)
 import Data.List (delete, intersect)
 import Flow
 
+
 nearestNeighbor :: (Int, Int) -> [(Int, Int)] -> [(Int, Int)]
 nearestNeighbor curPos [] = [curPos]
 nearestNeighbor curPos coords =
@@ -83,3 +84,4 @@ allIn xs ys = length (xs `intersect` ys) == length xs
 visitsAllPoints :: [(Int, Int)] -> Bool
 visitsAllPoints points
   = points `allIn` eval (pointsToCMDs points)
+

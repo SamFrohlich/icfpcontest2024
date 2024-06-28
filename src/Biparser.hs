@@ -10,30 +10,55 @@ module Biparser where
 import Data.Profunctor
 
 import Control.Monad
+import Control.Applicative (Alternative(..))
+import Flow
 
-data Parser a = Parser { runParser :: String -> (a, String) }
+data Parser a = Parser { runParser :: String -> [(a, String)] }
 
 instance Functor Parser where
   fmap :: (a -> b) -> Parser a -> Parser b
-  fmap f (Parser p) = Parser $ \s ->
-    let (a, s') = p s
-    in (f a, s')
+  fmap f (Parser p) = Parser $ \s -> do
+    (a, s') <- p s
+    pure (f a, s')
 
 instance Applicative Parser where
   pure :: a -> Parser a
-  pure a = Parser $ \s -> (a, s)
+  pure a = Parser $ \s -> [(a, s)]
   (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  Parser pf <*> Parser p = Parser $ \s ->
-    let (f, s') = pf s
-        (a, s'') = p s'
-    in (f a, s'')
+  Parser pf <*> Parser p = Parser $ \s -> do
+    (f, s') <- pf s
+    (a, s'') <- p s'
+    pure (f a, s'')
 
 instance Monad Parser where
   (>>=) :: Parser a -> (a -> Parser b) -> Parser b
-  Parser p >>= f = Parser $ \s ->
-    let (a, s') = p s
-        Parser p' = f a
-    in p' s
+  Parser p >>= f = Parser $ \s -> do
+    (a, s') <- p s
+    let Parser p' = f a
+    p' s'
+
+instance MonadFail Parser where
+  fail :: String -> Parser a
+  fail _ = Parser $ \_ -> []
+
+instance Alternative Parser where
+  empty :: Parser a
+  empty = fail ""
+
+  (<|>) :: Parser a -> Parser a -> Parser a
+  p1 <|> p2 = Parser $ \s ->
+    let res1 = runParser p1 s
+    in if null res1
+         then runParser p2 s
+         else res1
+
+parse :: Parser a -> String -> a
+parse p
+  = runParser p
+ .> head
+ .> fst
+
+-- Printer
 
 data Printer b a = Printer { runPrinter :: b -> Maybe (a, String) }
 
