@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 module Spaceships where
 
-import Data.List.Extra (minimumOn)
+import Data.List.Extra (minimumOn, replace, dropEnd, takeEnd)
 import Data.List (delete, intersect)
 import Flow
 
@@ -32,11 +32,36 @@ pointToPoint (x0, y0) (x1, y1)
     xAccs = accs (x1 - x0)
     yAccs = accs (y1 - y0)
 
-accs :: Int -> [Acc]
-accs d
-  | d == 0    = []
-  | d >  0    = Inc : replicate (d - 1) NOOP ++ [Dec]
-  | otherwise = Dec : replicate (abs d - 1) NOOP ++ [Inc]
+-- accs :: Int -> [Acc]
+-- accs d
+--   | d == 0    = []
+--   | d >  0    = Inc : replicate (d - 1) NOOP ++ [Dec]
+--   | otherwise = Dec : replicate (abs d - 1) NOOP ++ [Inc]
+accs = accs2
+
+-- accs & helper functions
+inv :: Acc -> Acc
+inv Inc = Dec
+inv Dec = Inc
+inv NOOP = NOOP
+
+insertNoop :: Int -> [Acc] -> [Acc]
+insertNoop i xs = take i xs ++ [NOOP] ++ takeEnd (length xs - i) xs
+
+triangulate :: Int -> [Acc]
+triangulate i = replicate i Inc ++ replicate i Dec
+
+accs2 :: Int -> [Acc]
+accs2 d
+  | d == 0 = []
+  | d < 0  = map inv $ accs2 (-d)
+  | otherwise =
+    let n :: Int = floor $ sqrt $ fromIntegral d in
+    let triangle = triangulate n in
+    let remainder = d - (n*n) in
+        if remainder == 0 then triangle
+        else if remainder <= n then insertNoop remainder triangle
+        else insertNoop n (insertNoop (remainder - n) triangle)
 
 zipDefault :: a -> [a] -> [a] -> [(a, a)]
 zipDefault _ []     []     = []
@@ -97,3 +122,11 @@ toNumpadChar (CMD (Inc, Inc)) = '9'
 
 toNumpadString :: [CMD] -> String
 toNumpadString = map toNumpadChar
+
+toPoints :: String -> String
+toPoints s = "[(" ++ (dropEnd 2 (replace " " ", " $ replace "\n" "),(" s)) ++ "]"
+
+-- getPoints :: String -> IO String
+-- getPoints n = do
+--     u <- WebRepl.sendMessage' ("get spaceship" ++ n)
+--     pure $ toPoints u
