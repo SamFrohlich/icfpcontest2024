@@ -65,7 +65,11 @@ library
                       NumberMap,
                       StringMap,
                       WebRepl,
-                      Spaceships
+                      Spaceships,
+                      Biparser,
+                      AST,
+                      Eval,
+                      ICFPBiparser
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -80,6 +84,7 @@ library
                       bytestring,
                       containers,
                       flow,
+                      profunctors,
                       isocline,
                       network-uri,
                       req,
