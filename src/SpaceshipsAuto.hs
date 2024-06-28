@@ -14,13 +14,20 @@ solveSpaceship :: Int -> IO ()
 solveSpaceship n = do
   let msg = "get spaceship" ++ show n
   res <- sendMessage msg
-  print (processResponse res)
+  let msg' = concat
+        [ "solve spaceship"
+        , show n
+        , " "
+        , processResponse res
+        ]
+  res' <- sendMessage msg'
+  print res'
 
-processResponse :: String -> [CMD]
+processResponse :: String -> String
 processResponse
   = parse pointsP
  .> pointsToCMDs
-
+ .> toNumpadString
 
 -- Parser
 
