@@ -1,15 +1,21 @@
 module StringMap where
 
-import Data.Map (Map)
-import Data.Map qualified as M
+import Data.Bimap (Bimap)
+import Data.Bimap qualified as M
 
-convertString :: String -> String
-convertString = map toICFPChar
+fromIcfpString :: String -> String
+fromIcfpString = map fromIcfpChar
 
-toICFPChar :: Char -> Char
-toICFPChar = (charMap M.!)
+toIcfpString :: String -> String
+toIcfpString = map toIcfpChar
 
-charMap :: Map Char Char
+fromIcfpChar :: Char -> Char
+fromIcfpChar = (charMap M.!)
+
+toIcfpChar :: Char -> Char
+toIcfpChar = (charMap M.!>)
+
+charMap :: Bimap Char Char
 charMap = M.fromList
   (zip ['!'.. '~']
        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n")

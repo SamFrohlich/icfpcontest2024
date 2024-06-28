@@ -75,6 +75,7 @@ library
     -- Other library packages from which modules are imported.
     build-depends:    aeson,
                       base ^>=4.19.1.0,
+                      bimap,
                       bytestring,
                       containers,
                       req
