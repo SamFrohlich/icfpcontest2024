@@ -85,3 +85,16 @@ visitsAllPoints :: [(Int, Int)] -> Bool
 visitsAllPoints points
   = points `allIn` eval (pointsToCMDs points)
 
+toNumpadChar :: CMD -> Char
+toNumpadChar (CMD (Dec, Dec)) = '1'
+toNumpadChar (CMD (NOOP, Dec)) = '2'
+toNumpadChar (CMD (Inc, Dec)) = '3'
+toNumpadChar (CMD (Dec, NOOP)) = '4'
+toNumpadChar (CMD (NOOP, NOOP)) = '5'
+toNumpadChar (CMD (Inc, NOOP)) = '6'
+toNumpadChar (CMD (Dec, Inc)) = '7'
+toNumpadChar (CMD (NOOP, Inc)) = '8'
+toNumpadChar (CMD (Inc, Inc)) = '9'
+
+toNumpadString :: [CMD] -> String
+toNumpadString = map toNumpadChar
