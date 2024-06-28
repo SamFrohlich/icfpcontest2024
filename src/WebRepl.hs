@@ -17,10 +17,11 @@ repl = do
     _    -> do
       putStrLn ""
       putStrLn "Response:"
-      sendMessage msg
+      res <- sendMessage msg
+      putStrLn res
       repl
 
-sendMessage :: String -> IO ()
+sendMessage :: String -> IO String
 -- You can either make your monad an instance of 'MonadHttp', or use
 -- 'runReq' in any IO-enabled monad without defining new instances.
 sendMessage message = runReq defaultHttpConfig $ do
@@ -40,4 +41,4 @@ sendMessage message = runReq defaultHttpConfig $ do
             |> toString
             |> Prelude.tail
             |> fromIcfpString
-  liftIO $ putStrLn responseMessage
+  pure responseMessage

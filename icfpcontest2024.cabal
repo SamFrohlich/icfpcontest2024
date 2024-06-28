@@ -66,6 +66,7 @@ library
                       StringMap,
                       WebRepl,
                       Spaceships,
+                      SpaceshipsAuto,
                       Biparser,
                       AST,
                       Eval,

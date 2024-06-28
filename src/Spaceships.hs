@@ -5,6 +5,7 @@ import Data.List.Extra (minimumOn, replace, dropEnd, takeEnd)
 import Data.List (delete, intersect)
 import Flow
 
+
 nearestNeighbor :: (Int, Int) -> [(Int, Int)] -> [(Int, Int)]
 nearestNeighbor curPos [] = [curPos]
 nearestNeighbor curPos coords =
