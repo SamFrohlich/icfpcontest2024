@@ -38,5 +38,4 @@ sendMessage message = runReq defaultHttpConfig $ do
             |> toString
             |> Prelude.tail
             |> fromIcfpString
-  liftIO $ print (r |> responseBody)
   liftIO $ putStrLn responseMessage
