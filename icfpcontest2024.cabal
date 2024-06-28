@@ -63,7 +63,8 @@ library
     -- Modules exported by the library.
     exposed-modules:  MyLib,
                       NumberMap,
-                      StringMap
+                      StringMap,
+                      WebRepl
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -72,8 +73,11 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.19.1.0,
-                      containers
+    build-depends:    aeson,
+                      base ^>=4.19.1.0,
+                      bytestring,
+                      containers,
+                      req
 
     -- Directories containing source files.
     hs-source-dirs:   src
