@@ -4,6 +4,7 @@ module Spaceships where
 import Data.List.Extra (minimumOn, replace, dropEnd, takeEnd)
 import Data.List (delete, intersect)
 import Flow
+import qualified WebRepl
 
 
 nearestNeighbor :: (Int, Int) -> [(Int, Int)] -> [(Int, Int)]
@@ -62,7 +63,7 @@ accs2 d
     let remainder = d - (n*n) in
         if remainder == 0 then triangle
         else if remainder <= n then insertNoop remainder triangle
-        else insertNoop n (insertNoop (remainder - n) triangle)
+        else insertNoop (remainder - n) (insertNoop n triangle)
 
 zipDefault :: a -> [a] -> [a] -> [(a, a)]
 zipDefault _ []     []     = []
@@ -127,7 +128,7 @@ toNumpadString = map toNumpadChar
 toPoints :: String -> String
 toPoints s = "[(" ++ (dropEnd 2 (replace " " ", " $ replace "\n" "),(" s)) ++ "]"
 
--- getPoints :: String -> IO String
--- getPoints n = do
---     u <- WebRepl.sendMessage' ("get spaceship" ++ n)
---     pure $ toPoints u
+getPoints :: Int -> IO String
+getPoints n = do
+    u <- WebRepl.sendMessage ("get spaceship" ++ show n)
+    pure $ toPoints u
