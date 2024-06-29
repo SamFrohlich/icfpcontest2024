@@ -67,6 +67,7 @@ library
                       WebRepl,
                       Spaceships,
                       SpaceshipsAuto,
+                      LambdaMan,
                       Biparser,
                       AST,
                       Eval,
