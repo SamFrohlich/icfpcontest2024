@@ -17,16 +17,25 @@ import Data.Dynamic (Dynamic (Dynamic), toDyn, fromDyn, Typeable, dynTypeRep, dy
 import Data.Unique
 import Control.Monad.IO.Class (liftIO, MonadIO)
 
+-- You pretty much always want to use this function,
+-- using a type annotation to specify what type you expect the term to evaluate to,
+-- e.g.`evalTo @Bool (B App (L 1 (V 1)) T)`
+-- which will evaluate to `True`
+-- NOTE: eval and evalTo only evaluates closed terms
 evalTo :: Typeable a => ICFP Var -> IO a
 evalTo term = fromDynUnsafe <$> eval term
 
--- NOTE: This only evaluates closed terms
+-- The IO here is for alpha conversion, using GHC's built in
+-- `newUnique :: IO Unique` to guarantee unique symbols
+-- NOTE: there's no handling of errors atm because I couldn't be bothered
+--       and there shouldn't be any unless there's a bug in my implementation or
+--       they give us ill-formed or open terms 
 eval :: ICFP Var -> IO Dynamic
 eval term = do
   term' <- alphaConvert term
   pure $ eval' M.empty term'
   where
-    eval' :: Map Unique (ICFP Unique) -> (ICFP Unique) -> Dynamic
+    eval' :: Map Unique (ICFP Unique) -> ICFP Unique -> Dynamic
     eval' _ T = toDyn True
     eval' _ F = toDyn False
     eval' _ (I z) = toDyn z
@@ -108,21 +117,6 @@ egICFP'' = B App (B App (L 1 (L 2 (V 1))) T) F
 egICFP''' :: ICFP Var
 egICFP''' = B App (L 1 (V 1)) T
 
-yComb :: ICFP Var
-yComb = L 1 $ B App (L 2 $ B App (V 1) (B App (V 2) (V 2)))
-                    (L 2 $ B App (V 1) (B App (V 2) (V 2)))
-
-fac :: ICFP Var
-fac = B App yComb (L 1 $ L 2 $ If (lazyB EQ (V 2) (I 0))
-                                  (I 1)
-                                  (lazyB Mul (V 2) (B App (V 1) (lazyB Sub (V 2) (I 1)))))
-
--- Not lazy enough to actually do this, but I don't think we actually need this
-lazyB :: BOp -> ICFP Var -> ICFP Var -> ICFP Var
-lazyB op x y = B App (B App (L 1 $ L 2 $ B op (V 1) (V 2)) x) y
-
-facEg :: ICFP Var
-facEg = B App fac (I 0) -- 3!
 
 -- test with `evalTo @Bool lazynessTest`
 -- it works!
@@ -134,6 +128,11 @@ lazynessTest' = B App (B App (L 1 (L 2 (V 2))) loop) T
 
 loop :: ICFP Var
 loop = B App yComb (L 1 $ V 1)
+
+yComb :: ICFP Var
+yComb = L 1 $ B App (L 2 $ B App (V 1) (B App (V 2) (V 2)))
+                    (L 2 $ B App (V 1) (B App (V 2) (V 2)))
+
 
 alphaConvert :: ICFP Var -> IO (ICFP Unique)
 alphaConvert term = do
