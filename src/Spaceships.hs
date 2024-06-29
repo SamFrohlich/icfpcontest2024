@@ -39,6 +39,7 @@ pointToPoint (x0, y0) (x1, y1)
 --   | d == 0    = []
 --   | d >  0    = Inc : replicate (d - 1) NOOP ++ [Dec]
 --   | otherwise = Dec : replicate (abs d - 1) NOOP ++ [Inc]
+accs :: Int -> [Acc]
 accs = accs2
 
 -- accs & helper functions

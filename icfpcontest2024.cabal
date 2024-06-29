@@ -71,7 +71,8 @@ library
                       Biparser,
                       AST,
                       Eval,
-                      ICFPBiparser
+                      ICFPBiparser,
+                      Parser
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -92,7 +93,10 @@ library
                       req,
                       utf8-string,
                       QuickCheck,
-                      extra
+                      HList,
+                      extra,
+                      transformers,
+                      parsec
 
     -- Directories containing source files.
     hs-source-dirs:   src

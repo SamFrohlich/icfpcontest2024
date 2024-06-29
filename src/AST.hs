@@ -1,31 +1,39 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module AST where
 
-import Prelude hiding (Ordering)
+import Prelude hiding (Ordering(..))
 
-data UOp a b where
-  Neg :: UOp Int Int
-  Not :: UOp Bool Bool
-  STI :: UOp String Int
-  ITS :: UOp Int String
+data UOp
+  = Neg
+  | Not
+  | S2I
+  | I2S
+  deriving (Eq, Ord, Show)
 
-data BOp a b c where
-  Add, Sub, Mul, Div, Mod :: BOp Int Int Int
-  LT, GT :: BOp Int Int Bool
-  EQ :: BOp a a Bool
-  Or, And :: BOp Bool Bool Bool
-  Cat :: BOp String String String
-  Take, Drop :: BOp Int String String
-  App :: BOp (a -> b) a b
+data BOp
+  = Add | Sub | Mul | Div | Mod
+  | LT | GT
+  | EQ
+  | Or | And
+  | Cat
+  | Take | Drop
+  | App
+  deriving (Eq, Ord, Show)
 
 type Var = Int
 
-data ICFP a where
-  T, F :: ICFP Bool
-  I :: Int -> ICFP Int
-  S :: String -> ICFP String
-  U :: UOp a b -> ICFP a -> ICFP b
-  B :: BOp a b c -> ICFP a -> ICFP b -> ICFP c
-  Q :: ICFP Bool -> ICFP a -> ICFP a -> ICFP a -- potentially Either a b
-  L :: Var -> ICFP b -> ICFP a -> ICFP (a -> b)
+data ICFP var
+  = T | F
+  | I Int
+  | S String
+  | U UOp (ICFP var)
+  | B BOp (ICFP var) (ICFP var)
+  | If (ICFP var) (ICFP var) (ICFP var)
+  | L var (ICFP var)
+  | V var
+  deriving (Eq, Ord, Show)
+
+example1 :: ICFP Var
+example1 = U Not T
