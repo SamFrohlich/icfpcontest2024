@@ -20,6 +20,7 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 evalTo :: Typeable a => ICFP Var -> IO a
 evalTo term = fromDynUnsafe <$> eval term
 
+-- NOTE: This only evaluates closed terms
 eval :: ICFP Var -> IO Dynamic
 eval term = do
   term' <- alphaConvert term
@@ -52,9 +53,9 @@ eval term = do
                               else eval' mem f
     eval' mem (B App x y) = f y
       where
-        f = fromDynUnsafe @(ICFP Unique -> Dynamic) (eval' mem x) -- Might need to do more here to ensure correct semantics
+        f = fromDynUnsafe @(ICFP Unique -> Dynamic) (eval' mem x)
     eval' mem (V v) = eval' mem (mem M.! v)
-    eval' mem (L v body) = toDyn (\x -> eval' (M.insert v x mem) body) -- eval' (M.insert )
+    eval' mem (L v body) = toDyn (\x -> eval' (M.insert v x mem) body)
 
 foldICFP :: ICFPFuncs var b -> ICFP var -> b
 foldICFP (ICFPFuncs{..}) = go
@@ -138,18 +139,10 @@ alphaConvert :: ICFP Var -> IO (ICFP Unique)
 alphaConvert term = do
   term' <- go M.empty (initEithers term)
   pure (extractAllUnique term')
-  -- term' <- evalStateT (go (initEithers term)) M.empty
-  -- pure (extractAllUnique term')
   where
     initEithers :: ICFP Var -> ICFP (Either Var a)
     initEithers = mapVar Left
     
-    debug :: ICFP (Either Var Unique) -> StateT (Map Var Unique) IO ()
-    debug termy = do
-      env <- get
-      liftIO $ print (fmap hashUnique env)
-      liftIO $ print (mapVar (fmap hashUnique) termy)
-
     go :: Map Var Unique -> ICFP (Either Var Unique) -> IO (ICFP (Either Var Unique))
     go alphaR = \case
       V (Right v) -> pure $ V (Right v)
@@ -162,7 +155,6 @@ alphaConvert term = do
           body' <- go alphaR body
           pure $ L (Right uv) body'
         Left v' -> do
-          -- debug body
           -- first, recursively alpha convert body *before* adding this lambda
           -- this is so any shadowed variables are renamed first
           body' <- go alphaR body
@@ -172,11 +164,8 @@ alphaConvert term = do
           uv <- liftIO newUnique
           let alphaR' = M.insert v' uv alphaR
 
-          -- debug body'
-
           -- finally, alpha rename with the new variable from this lambda
           body'' <- go alphaR' body'
-          -- debug body''
           pure $ L (Right uv) body''
 
       U uop x -> do x' <- go alphaR x; pure $ U uop x'
@@ -193,56 +182,6 @@ alphaConvert term = do
       F -> pure F
       I x -> pure $ I x
       S s -> pure $ S s
-
-    -- go :: ICFP (Either Var Unique) -> StateT (Map Var Unique) IO (ICFP (Either Var Unique))
-    -- go termy = do
-    --   -- alphaR <- get
-    --   -- liftIO $ print (hashUnique <$> alphaR)
-    --   case termy of
-    --     V (Right v) -> pure $ V (Right v)
-    --     V (Left v) -> do
-    --       alphaR <- get
-    --       case alphaR M.!? v of
-    --         Just uv -> pure $ V (Right uv)
-    --         Nothing -> pure $ V (Left v)
-
-    --     L v body -> case v of
-    --       Right uv -> do
-    --         body' <- go body
-    --         pure $ L (Right uv) body'
-    --       Left v' -> do
-    --         -- debug body
-    --         -- first, recursively alpha convert body *before* adding this lambda
-    --         -- this is so any shadowed variables are renamed first
-    --         body' <- go body
-            
-
-    --         -- then, generate unique id and add to Map
-    --         uv <- liftIO newUnique
-    --         modify (M.insert v' uv)
-
-    --         -- debug body'
-
-    --         -- finally, alpha rename with the new variable from this lambda
-    --         body'' <- go body'
-    --         -- debug body''
-    --         pure $ L (Right uv) body''
-
-    --     U uop x -> do x' <- go x; pure $ U uop x'
-    --     B bop x y -> do
-    --       x' <- go x
-    --       y' <- go y
-    --       pure $ B bop x' y'
-    --     If b t f -> do
-    --       b' <- go b
-    --       t' <- go t
-    --       f' <- go f
-    --       pure $ If b' t' f'
-    --     T -> pure T
-    --     F -> pure F
-    --     I x -> pure $ I x
-    --     S s -> pure $ S s
-
 
     extractAllUnique :: ICFP (Either Var Unique) -> ICFP Unique
     extractAllUnique = foldICFP $ ICFPFuncs
