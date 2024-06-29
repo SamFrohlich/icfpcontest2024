@@ -81,22 +81,23 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    aeson,
+    build-depends:    HList,
+                      QuickCheck,
+                      aeson,
                       base ^>=4.19.1.0,
                       bimap,
                       bytestring,
                       containers,
+                      extra,
                       flow,
-                      profunctors,
                       isocline,
                       network-uri,
+                      parsec,
+                      profunctors,
                       req,
-                      utf8-string,
-                      QuickCheck,
-                      HList,
-                      extra,
+                      split >= 0.2.5,
                       transformers,
-                      parsec
+                      utf8-string
 
     -- Directories containing source files.
     hs-source-dirs:   src
