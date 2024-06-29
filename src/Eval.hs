@@ -5,6 +5,7 @@ module Eval where
 
 import AST
 import NumberMap
+import StringMap
 
 import Prelude hiding (Ordering(..))
 
@@ -13,17 +14,71 @@ import Control.Monad.Trans.State.Strict (StateT, get, evalStateT, modify)
 import Data.Map (Map)
 import Data.Map qualified as M
 
-import Data.Dynamic (Dynamic (Dynamic), toDyn, fromDyn, Typeable, dynTypeRep, dynApp)
+import Data.Dynamic (Dynamic (Dynamic), toDyn, fromDyn, Typeable, dynTypeRep, dynApp, fromDynamic)
 import Data.Unique
 import Control.Monad.IO.Class (liftIO, MonadIO)
 
+import Hacking (strToAST)
+import Data.Function (fix)
+import Data.Data (Proxy (..))
+import Data.Maybe (fromMaybe)
+import Control.Applicative (Alternative((<|>)))
+
+import Debug.Trace
+import Flow
+
 -- You pretty much always want to use this function,
 -- using a type annotation to specify what type you expect the term to evaluate to,
+-- e.g.`evalStr @String "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK"`
+-- which will evaluate to "Hello World!"
+evalStr :: Typeable a => String -> IO a
+evalStr str = fromDynUnsafe <$> eval (strToAST str)
+
 -- e.g.`evalTo @Bool (B App (L 1 (V 1)) T)`
 -- which will evaluate to `True`
 -- NOTE: eval and evalTo only evaluates closed terms
 evalTo :: Typeable a => ICFP Var -> IO a
 evalTo term = fromDynUnsafe <$> eval term
+
+lambdaEg :: String
+lambdaEg = "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK" -- evals to String
+
+-- >>> strToAST lambdaEg
+-- B App (B App (L 2 (L 3 (V 2))) (B Cat (S "Hello") (S " World!"))) (I 42)
+
+limitsEg :: String -- evals to Int
+limitsEg = "B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L\" L# ? B= v# I! I\" B$ L$ B+ B$ v\" v$ B$ v\" v$ B- v# I\" I%"
+
+-- limitsUntypdLam
+  -- = ((\b -> (\c -> b (c c)) (\c -> b (c c))) (\b -> \c -> if (c == 0) then 1 else (\d -> (b d) + (b d)) (c - 1))) 4
+  -- = Y (\b -> \c -> if (c == 0) then 1 else (\d -> (b d) + (b d)) (c - 1)) 4
+
+limitsHaskell :: Int
+limitsHaskell = fix f 4
+  where
+    f :: (Int -> Int) -> Int -> Int
+    f recur x = if x == 0
+                then 1
+                else (\y -> (recur y) + (recur y)) (x - 1)
+
+-- limitsHaskell
+--   ==> fix f 4
+--   ==> f (fix f) 4
+--   ==> if 4 < 0
+        -- then 1
+        -- else (\y -> (fix f y) + (fix f y)) (4 - 1)
+--   ==> (\y -> (fix f y) + (fix f y)) (4 - 1)
+--   ==> (fix f (4 - 1)) + (fix f (4 - 1))
+--   ==> (fix f (4 - 1)) + (fix f (4 - 1))
+--   ==> (f (fix f) (4 - 1)) + (f (fix f) (4 - 1))
+--   ==> ((\y -> (fix f y) + (fix f y)) (3 - 1)) + ((\y -> (fix f y) + (fix f y)) (3 - 1))
+--   ==> ...
+--   ==> (((fix f 1) + (fix f 1)) + ((fix f 1) + (fix f 1))) + (((fix f 1) + (fix f 1)) + ((fix f 1) + (fix f 1)))
+--   ==> ((((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))) + (((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0)))) + ((((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))) + (((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))))
+
+limitsEgSmaller :: String -- evals to Int
+limitsEgSmaller = "B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L\" L# ? B= v# I! I\" B$ L$ B+ B$ v\" v$ B$ v\" v$ B- v# I\" I\""
+
 
 -- The IO here is for alpha conversion, using GHC's built in
 -- `newUnique :: IO Unique` to guarantee unique symbols
@@ -33,38 +88,110 @@ evalTo term = fromDynUnsafe <$> eval term
 eval :: ICFP Var -> IO Dynamic
 eval term = do
   term' <- alphaConvert term
-  pure $ eval' M.empty term'
+  eval' M.empty term'
   where
-    eval' :: Map Unique (ICFP Unique) -> ICFP Unique -> Dynamic
-    eval' _ T = toDyn True
-    eval' _ F = toDyn False
-    eval' _ (I z) = toDyn z
-    eval' _ (S s) = toDyn s
-    eval' mem (U Neg z) = liftDyn @Int negate (eval' mem z)
-    eval' mem (U Not b) = liftDyn @Bool not (eval' mem b)
-    eval' mem (U S2I s) = liftDyn fromBase94 (eval' mem s)
-    eval' mem (U I2S z) = liftDyn toBase94 (eval' mem z)
-    eval' mem (B Add x y) = liftDyn2 @Int (+) (eval' mem x) (eval' mem y)
-    eval' mem (B Sub x y) = liftDyn2 @Int (-) (eval' mem x) (eval' mem y)
-    eval' mem (B Mul x y) = liftDyn2 @Int (*) (eval' mem x) (eval' mem y)
-    eval' mem (B Div x y) = liftDyn2 @Int div (eval' mem x) (eval' mem y)
-    eval' mem (B Mod x y) = liftDyn2 @Int mod (eval' mem x) (eval' mem y)
-    eval' mem (B LT x y) = liftDyn2 @Int (<) (eval' mem x) (eval' mem y) -- NOTE assuming strict
-    eval' mem (B GT x y) = liftDyn2 @Int (>) (eval' mem x) (eval' mem y)
-    eval' mem (B EQ x y) = liftDyn2 @Int (==) (eval' mem x) (eval' mem y)
-    eval' mem (B Or x y) = liftDyn2 (||) (eval' mem x) (eval' mem y)
-    eval' mem (B And x y) = liftDyn2 (&&) (eval' mem x) (eval' mem y)
-    eval' mem (B Cat x y) = liftDyn2 @String (++) (eval' mem x) (eval' mem y)
-    eval' mem (B Take x y) = liftDyn2 @Int @String take (eval' mem x) (eval' mem y)
-    eval' mem (B Drop x y) = liftDyn2 @Int @String drop (eval' mem x) (eval' mem y)
-    eval' mem (If b t f) = if fromDynUnsafe @Bool (eval' mem b)
-                              then eval' mem t
-                              else eval' mem f
-    eval' mem (B App x y) = f y
-      where
-        f = fromDynUnsafe @(ICFP Unique -> Dynamic) (eval' mem x)
-    eval' mem (V v) = eval' mem (mem M.! v)
-    eval' mem (L v body) = toDyn (\x -> eval' (M.insert v x mem) body)
+    eval' :: Map Unique (ICFP Unique) -> ICFP Unique -> IO Dynamic
+    eval' env curTerm = case curTerm of
+      -- T          -> traceShowICFP env curTerm $ toDyn True
+      -- F          -> traceShowICFP env curTerm $ toDyn False
+      -- I z        -> traceShowICFP env curTerm $ toDyn z
+      -- S s        -> traceShowICFP env curTerm $ toDyn s
+      -- U Neg z    -> traceShowICFP env curTerm $ liftDyn @Int negate (eval' env z)
+      -- U Not b    -> traceShowICFP env curTerm $ liftDyn @Bool not (eval' env b)
+      -- U S2I s    -> traceShowICFP env curTerm $ liftDyn fromBase94 (eval' env s)
+      -- U I2S z    -> traceShowICFP env curTerm $ liftDyn toBase94 (eval' env z)
+      -- B Add x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (+) (eval' env x) (eval' env y)
+      -- B Sub x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (-) (eval' env x) (eval' env y)
+      -- B Mul x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (*) (eval' env x) (eval' env y)
+      -- B Div x y  -> traceShowICFP env curTerm $ liftDyn2 @Int div (eval' env x) (eval' env y)
+      -- B Mod x y  -> traceShowICFP env curTerm $ liftDyn2 @Int mod (eval' env x) (eval' env y)
+      -- B LT x y   -> traceShowICFP env curTerm $ liftDyn2 @Int (<) (eval' env x) (eval' env y) -- NOTE assuming strict
+      -- B GT x y   -> traceShowICFP env curTerm $ liftDyn2 @Int (>) (eval' env x) (eval' env y)
+      -- B EQ x y   -> traceShowICFP env curTerm $ dynEq (eval' env x) (eval' env y)
+      -- B Or x y   -> traceShowICFP env curTerm $ liftDyn2 (||) (eval' env x) (eval' env y)
+      -- B And x y  -> traceShowICFP env curTerm $ liftDyn2 (&&) (eval' env x) (eval' env y)
+      -- B Cat x y  -> traceShowICFP env curTerm $ liftDyn2 @String (++) (eval' env x) (eval' env y)
+      -- B Take x y -> traceShowICFP env curTerm $ liftDyn2 @Int @String take (eval' env x) (eval' env y)
+      -- B Drop x y -> traceShowICFP env curTerm $ liftDyn2 @Int @String drop (eval' env x) (eval' env y)
+      -- If b t f   -> traceShowICFP env curTerm $ if fromDynUnsafe @Bool (eval' env b)
+      --                           then eval' env t
+      --                           else eval' env f
+      -- B App x y  -> traceShowICFP env curTerm $ f y
+      --   where
+      --     f = fromDynUnsafe @(ICFP Unique -> Dynamic) (eval' env x)
+      -- V v        -> traceShowICFP env curTerm $ eval' env (env M.! v)
+      -- L v body   -> traceShowICFP env curTerm $ toDyn (\x -> eval' (M.insert v x env) body)
+      T          -> pure $ toDyn True
+      F          -> pure $ toDyn False
+      I z        -> pure $ toDyn z
+      S s        -> pure $ toDyn s
+      U Neg z    -> liftDyn @Int negate (eval' env z)
+      U Not b    -> liftDyn @Bool not (eval' env b)
+      U S2I s    -> liftDyn string2int (eval' env s)
+      U I2S z    -> liftDyn int2string (eval' env z)
+      B Add x y  -> liftDyn2 @Int (+) (eval' env x) (eval' env y)
+      B Sub x y  -> liftDyn2 @Int (-) (eval' env x) (eval' env y)
+      B Mul x y  -> liftDyn2 @Int (*) (eval' env x) (eval' env y)
+      B Div x y  -> liftDyn2 @Int quot (eval' env x) (eval' env y) -- required semantics are 'quot' instead of 'div'
+      B Mod x y  -> liftDyn2 @Int rem (eval' env x) (eval' env y) -- required semantics are 'rem' instead of 'mod'
+      B LT x y   -> liftDyn2 @Int (<) (eval' env x) (eval' env y) -- NOTE assuming strict
+      B GT x y   -> liftDyn2 @Int (>) (eval' env x) (eval' env y)
+      B EQ x y   -> dynEq (eval' env x) (eval' env y)
+      B Or x y   -> liftDyn2 (||) (eval' env x) (eval' env y)
+      B And x y  -> liftDyn2 (&&) (eval' env x) (eval' env y)
+      B Cat x y  -> liftDyn2 @String (++) (eval' env x) (eval' env y)
+      B Take x y -> liftDyn2 @Int @String take (eval' env x) (eval' env y)
+      B Drop x y -> liftDyn2 @Int @String drop (eval' env x) (eval' env y)
+      If b t f   -> do
+                      b' <- eval' env b
+                      if fromDynUnsafe @Bool b'
+                        then eval' env t
+                        else eval' env f
+      B App f y  -> do
+                      f' <- eval' env f
+                      fromDynUnsafe @(ICFP Unique -> IO Dynamic) f' y
+      V v        -> eval' env (env M.! v)
+      L v body   -> do
+        v' <- newUnique
+        let body' = alphaRename v v' body
+        pure $ toDyn (\x -> eval' (M.insert v' x env) body')
+
+alphaRename :: Unique -> Unique -> ICFP Unique -> ICFP Unique
+alphaRename v v' = mapVar (\var -> if var == v then v' else var)
+
+string2int :: String -> Int
+string2int = toIcfpString .> fromBase94
+
+int2string :: Int -> String
+int2string = toBase94 .> fromIcfpString
+
+traceShowICFP :: Map Unique (ICFP Unique) -> ICFP Unique -> b -> b
+traceShowICFP env term = trace debugStr
+  where
+    debugStr = env' ++ " |- " ++ term'
+    env' = M.mapKeys hashUnique env
+           |> fmap (mapVar hashUnique .> prettyAST)
+           |> show
+    term' = prettyAST $ mapVar hashUnique term
+
+dynEq :: IO Dynamic -> IO Dynamic -> IO Dynamic
+dynEq mx my = do
+  x <- mx
+  y <- my
+  pure $ fromMaybe
+      (error "Types of B Eq don't match or aren't Int, Bool, or String")
+      (   typedEq @Int Proxy x y
+      <|> typedEq @Bool Proxy x y
+      <|> typedEq @String Proxy x y
+      )
+  where
+    typedEq :: forall a. (Eq a, Typeable a) => Proxy a -> Dynamic -> Dynamic -> Maybe Dynamic
+    typedEq _ x y = do
+      x' <- fromDynamic @a x
+      y' <- fromDynamic @a y
+      Just (toDyn $ x' == y')
+
+
 
 foldICFP :: ICFPFuncs var b -> ICFP var -> b
 foldICFP (ICFPFuncs{..}) = go
@@ -203,8 +330,14 @@ alphaConvert term = do
 fromDynUnsafe :: Typeable a => Dynamic -> a
 fromDynUnsafe x = fromDyn x (error $ "Dynamic typing failed! Actual type:" ++ show (dynTypeRep x))
 
-liftDyn :: forall a b. (Typeable a, Typeable b) => (a -> b) -> Dynamic -> Dynamic
-liftDyn f x = toDyn f `dynApp` x
+liftDyn :: forall a b. (Typeable a, Typeable b) => (a -> b) -> IO Dynamic -> IO Dynamic
+liftDyn f mx = do
+  x <- mx
+  pure $ toDyn f `dynApp` x
 
-liftDyn2 :: forall a b c. (Typeable a, Typeable b, Typeable c) => (a -> b -> c) -> Dynamic -> Dynamic -> Dynamic
-liftDyn2 f x y = (toDyn f `dynApp` x) `dynApp` y
+liftDyn2 :: forall a b c. (Typeable a, Typeable b, Typeable c)
+         => (a -> b -> c) -> IO Dynamic -> IO Dynamic -> IO Dynamic
+liftDyn2 f mx my = do
+  x <- mx
+  y <- my
+  pure $ (toDyn f `dynApp` x) `dynApp` y

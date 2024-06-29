@@ -8,6 +8,7 @@ import Flow
 import Network.HTTP.Req
 import StringMap
 import System.Console.Isocline (readline)
+import Eval (evalStr)
 
 repl :: IO ()
 repl = do
@@ -36,9 +37,15 @@ sendMessage message = runReq defaultHttpConfig $ do
       (ReqBodyBs payload) -- use built-in options or add your own
       bsResponse -- specify how to interpret response
       (header "Authorization" "Bearer 3e6b791a-a998-49db-9ec6-ddc017323fc0") -- query params, headers, explicit port number, etc.
-  let responseMessage
-        = r |> responseBody
-            |> toString
-            |> Prelude.tail
-            |> fromIcfpString
-  pure responseMessage
+  -- let responseMessage
+  --       = r |> responseBody
+  --           |> toString
+  --           |> Prelude.tail
+  --           |> fromIcfpString
+  -- pure responseMessage
+
+  r |> responseBody
+    |> toString
+    -- |> Prelude.tail
+    |> evalStr @String
+    |> liftIO

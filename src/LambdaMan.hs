@@ -82,7 +82,7 @@ navigateStep board pos =
 navigate :: (Board, (Int, Int)) -> [(Int, Int)]
 navigate (board, pos) =
     let (nextBoard, offset, continue) = navigateStep board pos in
-    if not continue then []
+    if not continue then [] -- jess: no offset for the last move?
     else offset : navigate (nextBoard, pos `sumPos` offset)
 
 offsetToChar :: (Int, Int) -> Char
@@ -94,6 +94,9 @@ offsetToChar e = error $ "Invalid offset '" ++ show e ++ "'"
 
 solve :: String -> String
 solve x = map offsetToChar $ navigate $ strToBoard x
+
+lambdaman4 :: String
+lambdaman4 = "......\n.#....\n..#...\n...#..\n..#L#.\n.#...#\n......"
 
 solveLambdaman :: Int -> IO ()
 solveLambdaman n = do

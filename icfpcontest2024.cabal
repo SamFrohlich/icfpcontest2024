@@ -72,7 +72,8 @@ library
                       AST,
                       Eval,
                       ICFPBiparser,
-                      Parser
+                      Parser,
+                      Hacking
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -97,7 +98,8 @@ library
                       req,
                       split >= 0.2.5,
                       transformers,
-                      utf8-string
+                      utf8-string,
+                      string-interpolate
 
     -- Directories containing source files.
     hs-source-dirs:   src
