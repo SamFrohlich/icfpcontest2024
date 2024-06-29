@@ -92,7 +92,8 @@ library
                       utf8-string,
                       QuickCheck,
                       HList,
-                      extra
+                      extra,
+                      transformers
 
     -- Directories containing source files.
     hs-source-dirs:   src
