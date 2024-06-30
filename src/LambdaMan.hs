@@ -65,7 +65,7 @@ checkBranch board pos@(x, y) =
         -- if it's a wall, don't worry about it
         Just Wall -> 0
         -- if it's a pill or empty space, explore the neighboring spaces and sum
-        Just Pill -> 1 + sum (map (checkBranch nextBoard) myNeighbors)
+        Just Pill -> 1 + sum (map (checkBranch nextBoard) myNeighbors) -- jess: seems like a very expensive and not very useful heuristic
         _ -> sum (map (checkBranch nextBoard) myNeighbors)
 
 -- partially navigated board -> current *position* -> (more navigated board, new *offset*, whether to continue)
@@ -92,6 +92,15 @@ offsetToChar (0, 1) = 'D'
 offsetToChar (0, -1) = 'U'
 offsetToChar e = error $ "Invalid offset '" ++ show e ++ "'"
 
+-- jess: testing this on lambdaman3, it's extremely slow and ends up going back and forth LRLRLRL etc.
+--       my suggestion: greedy BFS
+--       pros: - fast
+--             - simple
+--             - wall-aware
+--             - guaranteed optimal path between any two points
+--             - pill search and pathing rolled into one
+--       cons: - overall path not guaranteed to be optimal (but it's TSP, so nothing will give you that)
+--             - might involve a lot of backtracking
 solve :: String -> String
 solve x = map offsetToChar $ navigate $ strToBoard x
 

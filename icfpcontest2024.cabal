@@ -73,7 +73,8 @@ library
                       Eval,
                       ICFPBiparser,
                       Parser,
-                      Hacking
+                      Hacking,
+                      Efficiency
 
     -- Modules included in this library but not exported.
     -- other-modules:
