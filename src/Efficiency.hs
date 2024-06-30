@@ -8,19 +8,19 @@ toHask :: String -> IO ()
 toHask = strToAST .> printAST
 
 -- toHask "B$ L! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! I\" L! B+ B+ v! v! B+ v! v!"
-e1, e2, e3, e4, e5 :: Int
+e1, e2, e3, e4, e5 :: Integer
 -- 17592186044416
 e1 = (\x_0 -> (x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) (1))))))))))))))))))))))) (\x_0 -> ((x_0) + (x_0)) + ((x_0) + (x_0)))
 
 -- toHask "B+ I7c B* B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L$ L% ? B= v% I! I\" B+ I\" B$ v$ B- v% I\" I\":c1+0 I!"
 -- 2134
-e2 = (2134) + ((fix f (9345873499 :: Int)) * (0))
+e2 = (2134) + ((fix f (9345873499 :: Integer)) * (0))
   where
     f = \recur -> \x -> if x == 0 then 1 else 1 + recur (x - 1)
 
 -- toHask "B+ I7c B* B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L$ L% ? B= v% I! I\" B+ I\" B$ v$ B- v% I\" I\":c1+0 I\""
 -- 9345875634
-e3 = (2134) + ((fix f (9345873499 :: Int)) * 1)
+e3 = (2134) + ((fix f (9345873499 :: Integer)) * 1)
   where
     f = \recur -> \x -> if x == 0 then 1 else 1 + recur (x - 1)
 
@@ -29,7 +29,7 @@ e3 = (2134) + ((fix f (9345873499 :: Int)) * 1)
 -- fib 41 = 165580141
 e4 = (fix f) (40)
   where
-    f :: (Int -> Int) -> Int -> Int
+    f :: (Integer -> Integer) -> Integer -> Integer
     f recur x = if x < 2 then 1 else recur (x - 1) + recur (x - 2)
 
 -- toHask "B$ L' B$ L( B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L$ L% ? B& B> v% I\"41= B& B$ v' v% B$ v( B+ v% I\" v% B$ v$ B+ v% I\" I# B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L$ L% ? B= v% I\" T ? B= B% v% I# I\" F B$ v$ B/ v% I# L& B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L$ L% ? B= v% v& T ? B= B% v& v% I! F B$ v$ B+ v% I\" I#"

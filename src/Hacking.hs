@@ -21,7 +21,7 @@ lambdaEg :: String
 lambdaEg = "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK"
 
 
-strToAST :: String -> AST.ICFP Int
+strToAST :: String -> AST.ICFP Integer
 strToAST = toICFP .> toAST
 
 -- >>> strToAST lambdaEg
@@ -29,7 +29,7 @@ strToAST = toICFP .> toAST
 
 data ICFP =
   T | F
-  | I Int
+  | I Integer
   | S String
   | UNeg | UNot | US2I | UI2S
   | BAdd | BSub | BMul | BDiv | BMod
@@ -38,8 +38,8 @@ data ICFP =
   | BCat | BTake | BDrop
   | BApp
   | If
-  | Lam Int -- variable number
-  | Var Int -- ditto
+  | Lam Integer -- variable number
+  | Var Integer -- ditto
   deriving (Show, Eq)
 
 toICFP :: String -> [ICFP]
@@ -74,10 +74,10 @@ toICFP prog = fmap toICFP' (splitOn " " prog)
     toICFP' ('v' : name) = Var (fromBase94 name)
     toICFP' _ = error "Invalid token in string!"
 
-toAST :: [ICFP] -> AST.ICFP Int
+toAST :: [ICFP] -> AST.ICFP Integer
 toAST = reverse .> foldl' f [] .> head
   where
-    f :: [AST.ICFP Int] -> ICFP -> [AST.ICFP Int]
+    f :: [AST.ICFP Integer] -> ICFP -> [AST.ICFP Integer]
     f stack tok = stack |> case tok of
       -- 0-arity
       T -> arity0 (AST.T)
@@ -111,22 +111,22 @@ toAST = reverse .> foldl' f [] .> head
       -- 3-arity
       If -> arity3 AST.If
 
-arity0 :: AST.ICFP Int -> [AST.ICFP Int] -> [AST.ICFP Int]
+arity0 :: AST.ICFP Integer -> [AST.ICFP Integer] -> [AST.ICFP Integer]
 arity0 op stack = op : stack
 
-arity1 :: (AST.ICFP Int -> AST.ICFP Int) -> [AST.ICFP Int] -> [AST.ICFP Int]
+arity1 :: (AST.ICFP Integer -> AST.ICFP Integer) -> [AST.ICFP Integer] -> [AST.ICFP Integer]
 arity1 op = \case
   operand : stack -> op operand : stack
   [] -> error "arity1 operator expected an operand on the stack, but it was empty!"
 
-arity2 :: (AST.ICFP Int -> AST.ICFP Int -> AST.ICFP Int) -> [AST.ICFP Int] -> [AST.ICFP Int]
+arity2 :: (AST.ICFP Integer -> AST.ICFP Integer -> AST.ICFP Integer) -> [AST.ICFP Integer] -> [AST.ICFP Integer]
 arity2 op = \case
   x : y : stack -> op x y : stack
   _ : [] -> error "arity2 operator expected 2 operands, but 1 on stack!"
   [] -> error "arity2 operator expected 2 operands, but 0 on stack!"
 
-arity3 :: (AST.ICFP Int -> AST.ICFP Int -> AST.ICFP Int -> AST.ICFP Int)
-       -> [AST.ICFP Int] -> [AST.ICFP Int]
+arity3 :: (AST.ICFP Integer -> AST.ICFP Integer -> AST.ICFP Integer -> AST.ICFP Integer)
+       -> [AST.ICFP Integer] -> [AST.ICFP Integer]
 arity3 op = \case
   x : y : z : stack -> op x y z : stack
   _ : _ : [] -> error "arity3 operator expected 3 operands, but 2 on stack!"
@@ -134,10 +134,10 @@ arity3 op = \case
   [] -> error "arity2 operator expected 2 operands, but 0 on stack!"
 
 
--- data Value = ZZ Int | SS String | BB Bool | LL Int [ICFP]
+-- data Value = ZZ Integer | SS String | BB Bool | LL Integer [ICFP]
 --   deriving (Show, Eq)
 
--- eval :: M.Map Int Value -> [ICFP] -> (Value, [ICFP])
+-- eval :: M.Map Integer Value -> [ICFP] -> (Value, [ICFP])
 -- eval mem (T : rest) = (BB True, rest)
 -- eval mem (F : rest) = (BB False, rest)
 -- eval mem (I z : rest) = (ZZ z, rest)
@@ -236,7 +236,7 @@ arity3 op = \case
 --           in (token : lam, rest''')
 -- eval mem (Var v : rest) = trace ("var" ++ show v ++ ":" ++ show rest ++ ":" ++ show mem) (mem M.! v, rest)
 
--- newtype Arity = Arity Int
+-- newtype Arity = Arity Integer
 -- arity :: ICFP -> Arity
 -- arity (I _) = Arity 0
 -- arity (S _) = Arity 0

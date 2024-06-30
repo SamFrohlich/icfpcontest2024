@@ -46,17 +46,17 @@ lambdaEg = "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK" -- evals to String
 -- >>> strToAST lambdaEg
 -- B App (B App (L 2 (L 3 (V 2))) (B Cat (S "Hello") (S " World!"))) (I 42)
 
-limitsEg :: String -- evals to Int
+limitsEg :: String -- evals to Integer
 limitsEg = "B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L\" L# ? B= v# I! I\" B$ L$ B+ B$ v\" v$ B$ v\" v$ B- v# I\" I%"
 
 -- limitsUntypdLam
   -- = ((\b -> (\c -> b (c c)) (\c -> b (c c))) (\b -> \c -> if (c == 0) then 1 else (\d -> (b d) + (b d)) (c - 1))) 4
   -- = Y (\b -> \c -> if (c == 0) then 1 else (\d -> (b d) + (b d)) (c - 1)) 4
 
-limitsHaskell :: Int
+limitsHaskell :: Integer
 limitsHaskell = fix f 4
   where
-    f :: (Int -> Int) -> Int -> Int
+    f :: (Integer -> Integer) -> Integer -> Integer
     f recur x = if x == 0
                 then 1
                 else (\y -> (recur y) + (recur y)) (x - 1)
@@ -76,7 +76,7 @@ limitsHaskell = fix f 4
 --   ==> (((fix f 1) + (fix f 1)) + ((fix f 1) + (fix f 1))) + (((fix f 1) + (fix f 1)) + ((fix f 1) + (fix f 1)))
 --   ==> ((((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))) + (((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0)))) + ((((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))) + (((fix f 0) + (fix f 0)) + ((fix f 0) + (fix f 0))))
 
-limitsEgSmaller :: String -- evals to Int
+limitsEgSmaller :: String -- evals to Integer
 limitsEgSmaller = "B$ B$ L\" B$ L# B$ v\" B$ v# v# L# B$ v\" B$ v# v# L\" L# ? B= v# I! I\" B$ L$ B+ B$ v\" v$ B$ v\" v$ B- v# I\" I\""
 
 
@@ -96,23 +96,23 @@ eval term = do
       -- F          -> traceShowICFP env curTerm $ toDyn False
       -- I z        -> traceShowICFP env curTerm $ toDyn z
       -- S s        -> traceShowICFP env curTerm $ toDyn s
-      -- U Neg z    -> traceShowICFP env curTerm $ liftDyn @Int negate (eval' env z)
+      -- U Neg z    -> traceShowICFP env curTerm $ liftDyn @Integer negate (eval' env z)
       -- U Not b    -> traceShowICFP env curTerm $ liftDyn @Bool not (eval' env b)
       -- U S2I s    -> traceShowICFP env curTerm $ liftDyn fromBase94 (eval' env s)
       -- U I2S z    -> traceShowICFP env curTerm $ liftDyn toBase94 (eval' env z)
-      -- B Add x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (+) (eval' env x) (eval' env y)
-      -- B Sub x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (-) (eval' env x) (eval' env y)
-      -- B Mul x y  -> traceShowICFP env curTerm $ liftDyn2 @Int (*) (eval' env x) (eval' env y)
-      -- B Div x y  -> traceShowICFP env curTerm $ liftDyn2 @Int div (eval' env x) (eval' env y)
-      -- B Mod x y  -> traceShowICFP env curTerm $ liftDyn2 @Int mod (eval' env x) (eval' env y)
-      -- B LT x y   -> traceShowICFP env curTerm $ liftDyn2 @Int (<) (eval' env x) (eval' env y) -- NOTE assuming strict
-      -- B GT x y   -> traceShowICFP env curTerm $ liftDyn2 @Int (>) (eval' env x) (eval' env y)
+      -- B Add x y  -> traceShowICFP env curTerm $ liftDyn2 @Integer (+) (eval' env x) (eval' env y)
+      -- B Sub x y  -> traceShowICFP env curTerm $ liftDyn2 @Integer (-) (eval' env x) (eval' env y)
+      -- B Mul x y  -> traceShowICFP env curTerm $ liftDyn2 @Integer (*) (eval' env x) (eval' env y)
+      -- B Div x y  -> traceShowICFP env curTerm $ liftDyn2 @Integer div (eval' env x) (eval' env y)
+      -- B Mod x y  -> traceShowICFP env curTerm $ liftDyn2 @Integer mod (eval' env x) (eval' env y)
+      -- B LT x y   -> traceShowICFP env curTerm $ liftDyn2 @Integer (<) (eval' env x) (eval' env y) -- NOTE assuming strict
+      -- B GT x y   -> traceShowICFP env curTerm $ liftDyn2 @Integer (>) (eval' env x) (eval' env y)
       -- B EQ x y   -> traceShowICFP env curTerm $ dynEq (eval' env x) (eval' env y)
       -- B Or x y   -> traceShowICFP env curTerm $ liftDyn2 (||) (eval' env x) (eval' env y)
       -- B And x y  -> traceShowICFP env curTerm $ liftDyn2 (&&) (eval' env x) (eval' env y)
       -- B Cat x y  -> traceShowICFP env curTerm $ liftDyn2 @String (++) (eval' env x) (eval' env y)
-      -- B Take x y -> traceShowICFP env curTerm $ liftDyn2 @Int @String take (eval' env x) (eval' env y)
-      -- B Drop x y -> traceShowICFP env curTerm $ liftDyn2 @Int @String drop (eval' env x) (eval' env y)
+      -- B Take x y -> traceShowICFP env curTerm $ liftDyn2 @Integer @String take (eval' env x) (eval' env y)
+      -- B Drop x y -> traceShowICFP env curTerm $ liftDyn2 @Integer @String drop (eval' env x) (eval' env y)
       -- If b t f   -> traceShowICFP env curTerm $ if fromDynUnsafe @Bool (eval' env b)
       --                           then eval' env t
       --                           else eval' env f
@@ -125,23 +125,23 @@ eval term = do
       F          -> pure $ toDyn False
       I z        -> pure $ toDyn z
       S s        -> pure $ toDyn s
-      U Neg z    -> liftDyn @Int negate (eval' env z)
+      U Neg z    -> liftDyn @Integer negate (eval' env z)
       U Not b    -> liftDyn @Bool not (eval' env b)
       U S2I s    -> liftDyn string2int (eval' env s)
       U I2S z    -> liftDyn int2string (eval' env z)
-      B Add x y  -> liftDyn2 @Int (+) (eval' env x) (eval' env y)
-      B Sub x y  -> liftDyn2 @Int (-) (eval' env x) (eval' env y)
-      B Mul x y  -> liftDyn2 @Int (*) (eval' env x) (eval' env y)
-      B Div x y  -> liftDyn2 @Int quot (eval' env x) (eval' env y) -- required semantics are 'quot' instead of 'div'
-      B Mod x y  -> liftDyn2 @Int rem (eval' env x) (eval' env y) -- required semantics are 'rem' instead of 'mod'
-      B LT x y   -> liftDyn2 @Int (<) (eval' env x) (eval' env y) -- NOTE assuming strict
-      B GT x y   -> liftDyn2 @Int (>) (eval' env x) (eval' env y)
+      B Add x y  -> liftDyn2 @Integer (+) (eval' env x) (eval' env y)
+      B Sub x y  -> liftDyn2 @Integer (-) (eval' env x) (eval' env y)
+      B Mul x y  -> liftDyn2 @Integer (*) (eval' env x) (eval' env y)
+      B Div x y  -> liftDyn2 @Integer quot (eval' env x) (eval' env y) -- required semantics are 'quot' instead of 'div'
+      B Mod x y  -> liftDyn2 @Integer rem (eval' env x) (eval' env y) -- required semantics are 'rem' instead of 'mod'
+      B LT x y   -> liftDyn2 @Integer (<) (eval' env x) (eval' env y) -- NOTE assuming strict
+      B GT x y   -> liftDyn2 @Integer (>) (eval' env x) (eval' env y)
       B EQ x y   -> dynEq (eval' env x) (eval' env y)
       B Or x y   -> liftDyn2 (||) (eval' env x) (eval' env y)
       B And x y  -> liftDyn2 (&&) (eval' env x) (eval' env y)
       B Cat x y  -> liftDyn2 @String (++) (eval' env x) (eval' env y)
-      B Take x y -> liftDyn2 @Int @String take (eval' env x) (eval' env y)
-      B Drop x y -> liftDyn2 @Int @String drop (eval' env x) (eval' env y)
+      B Take x y -> liftDyn2 @Integer @String take' (eval' env x) (eval' env y)
+      B Drop x y -> liftDyn2 @Integer @String drop' (eval' env x) (eval' env y)
       If b t f   -> do
                       b' <- eval' env b
                       if fromDynUnsafe @Bool b'
@@ -159,28 +159,34 @@ eval term = do
 alphaRename :: Unique -> Unique -> ICFP Unique -> ICFP Unique
 alphaRename v v' = mapVar (\var -> if var == v then v' else var)
 
-string2int :: String -> Int
+string2int :: String -> Integer
 string2int = toIcfpString .> fromBase94
 
-int2string :: Int -> String
+int2string :: Integer -> String
 int2string = toBase94 .> fromIcfpString
+
+take' :: Integer -> [a] -> [a]
+take' n = take (fromInteger n)
+
+drop' :: Integer -> [a] -> [a]
+drop' n = drop (fromInteger n)
 
 traceShowICFP :: Map Unique (ICFP Unique) -> ICFP Unique -> b -> b
 traceShowICFP env term = trace debugStr
   where
     debugStr = env' ++ " |- " ++ term'
     env' = M.mapKeys hashUnique env
-           |> fmap (mapVar hashUnique .> prettyAST)
+           |> fmap (mapVar (hashUnique .> fromIntegral) .> prettyAST)
            |> show
-    term' = prettyAST $ mapVar hashUnique term
+    term' = prettyAST $ mapVar (hashUnique .> fromIntegral) term
 
 dynEq :: IO Dynamic -> IO Dynamic -> IO Dynamic
 dynEq mx my = do
   x <- mx
   y <- my
   pure $ fromMaybe
-      (error "Types of B Eq don't match or aren't Int, Bool, or String")
-      (   typedEq @Int Proxy x y
+      (error "Types of B Eq don't match or aren't Integer, Bool, or String")
+      (   typedEq @Integer Proxy x y
       <|> typedEq @Bool Proxy x y
       <|> typedEq @String Proxy x y
       )
@@ -210,7 +216,7 @@ foldICFP (ICFPFuncs{..}) = go
 data ICFPFuncs var b = ICFPFuncs
   { tF :: b
   , fF :: b
-  , iF :: Int -> b
+  , iF :: Integer -> b
   , sF :: String -> b
   , uF :: UOp -> b -> b
   , bF :: BOp -> b -> b -> b

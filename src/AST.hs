@@ -26,11 +26,11 @@ data BOp
   | App
   deriving (Eq, Ord, Show)
 
-type Var = Int
+type Var = Integer
 
 data ICFP var
   = T | F
-  | I Int
+  | I Integer
   | S String
   | U UOp (ICFP var)
   | B BOp (ICFP var) (ICFP var)

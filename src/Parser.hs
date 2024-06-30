@@ -42,7 +42,7 @@ bop = char 'B' *>
   <|> (App <$ char '$')
   <?> "bop")
 
-icfp :: Parser (ICFP Int)
+icfp :: Parser (ICFP Integer)
 icfp =  buildExpressionParser table term
 
 -- leaves

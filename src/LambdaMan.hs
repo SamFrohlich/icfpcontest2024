@@ -3,6 +3,19 @@ module LambdaMan where
 import Data.List.Extra (takeEnd, minimumOn, maximumOn, splitOn, elemIndex, findIndex)
 import Data.Maybe (isJust, fromJust)
 import qualified WebRepl
+import Data.IntMap (IntMap)
+import Data.IntMap qualified as M
+
+
+------------------------------------------------
+-- Refactor
+------------------------------------------------
+
+-- type Board' = IntMap
+
+------------------------------------------------
+-- Old method
+------------------------------------------------
 
 -- build a DFS tree from lambdaman's position
 -- take the branch that has the least uneaten pellets
