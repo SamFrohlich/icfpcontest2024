@@ -100,7 +100,8 @@ library
                       split >= 0.2.5,
                       transformers,
                       utf8-string,
-                      string-interpolate
+                      string-interpolate,
+                      pqueue
 
     -- Directories containing source files.
     hs-source-dirs:   src
