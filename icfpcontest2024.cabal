@@ -74,7 +74,10 @@ library
                       ICFPBiparser,
                       Parser,
                       Hacking,
-                      Efficiency
+                      Efficiency,
+                      ThreeD,
+                      HOAS,
+                      RLE
 
     -- Modules included in this library but not exported.
     -- other-modules:

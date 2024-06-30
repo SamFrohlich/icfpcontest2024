@@ -8,7 +8,7 @@ toHask :: String -> IO ()
 toHask = strToAST .> printAST
 
 -- toHask "B$ L! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! B$ v! I\" L! B+ B+ v! v! B+ v! v!"
-e1, e2, e3, e4, e5, e6, e12, e13 :: Int
+e1, e2, e3, e4, e5, e6, e12, e13 :: Integer
 
 -- 17592186044416
 e1 = (\x_0 -> (x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) ((x_0) (1))))))))))))))))))))))) (\x_0 -> ((x_0) + (x_0)) + ((x_0) + (x_0)))

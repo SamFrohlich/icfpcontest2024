@@ -42,6 +42,12 @@ data ICFP var
 example1 :: ICFP Var
 example1 = U Not T
 
+
+
+-------------------
+-- Pretty printing
+-------------------
+
 printAST :: ICFP Var -> IO ()
 printAST = prettyAST .> putStrLn
 

@@ -12,7 +12,7 @@ import Data.Sequence qualified as Seq
 import Flow
 import Data.Set (Set)
 import Data.Set qualified as S 
-import Data.List (find)
+import Data.List (find, group)
 import Data.Function (fix)
 import Debug.Trace (traceShow, trace)
 
@@ -187,6 +187,13 @@ lamman21 = (fix (\x_1 -> \x_2 -> if (x_2) == (0) then ".........................
 
 bigNum :: Int
 bigNum = 2 ^ 20 + 1 
+
+------------------------------------------------
+-- Run-length encoding/decoding
+------------------------------------------------
+
+-- encode :: [Move] -> [(Int, Move)]
+
 
 ------------------------------------------------
 -- Old method
