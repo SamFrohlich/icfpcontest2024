@@ -15,6 +15,11 @@ import Data.Set qualified as S
 import Data.List (find, group)
 import Data.Function (fix)
 import Debug.Trace (traceShow, trace)
+import HOAS (HOASe, hoasToAST)
+import HOAS qualified as H
+import RLE (rleString)
+import AST (printAST)
+import Eval (string2int)
 
 solveLambdaman :: Int -> IO ()
 solveLambdaman n = do
@@ -28,13 +33,48 @@ solveLambdaman n = do
 solveLambdamanPure :: String -> String
 solveLambdamanPure = strToBoard .> lambdaman .> movesToStr
 
+solveLambdamanRLE :: Integer -> Int -> IO ()
+solveLambdamanRLE digits n = do
+  let msg = "get lambdaman" ++ show n
+  res <- WebRepl.sendMessage msg
+  let solution = solveLambdamanPureRLE digits res
+  putStrLn "ICFP code sent:"
+  print $ H.hoasToStr solution
+  putStrLn "Haskell-style translation:"
+  printAST $ H.hoasToAST solution
+  putStrLn "decoded solution:"
+  print =<< H.evalHOASe solution
+  res2 <- WebRepl.sendHOASe $ H.s ("solve lambdaman" ++ show n ++ " ") H.++ solution
+  print res2
+
+solveLambdamanPureRLE :: Integer -> String -> HOASe String
+solveLambdamanPureRLE digits
+  = strToBoard .> lambdaman .> movesToStr .> rleString digits
+
+
 movesToStr :: [Move] -> String
 movesToStr = map show .> concat
 
 -- solveFromFile :: FilePath -> IO String
+solveFromFile :: FilePath -> IO String
 solveFromFile file = do
   puzzle <- readFile file
-  pure $ (strToBoard .> lambdaman) puzzle
+  print $ H.hoasToStr $ solveLambdamanPureRLE 1 puzzle
+  H.evalHOASe $ solveLambdamanPureRLE 1 puzzle
+
+lman10 :: String
+lman10 = ("L") ++ (fix f (1 :: Int))
+  where
+    f = (\recur -> \x ->
+          if x == 2500
+            then ""
+            else (if (x `rem` 50) == 0
+                    then "\n"
+                    else "")
+                  ++ ((if (x `rem` (11)) == (0)
+                         then "#"
+                         else ".") ++
+                         ((recur) (x + 1))))
 
 ------------------------------------------------
 -- Refactor
@@ -183,7 +223,12 @@ neighbourOffsets = [((1, 0), R), ((-1, 0), L), ((0, 1), D), ((0, -1), U)]
 ------------------------------------------------
 
 lamman21 :: String
-lamman21 = (fix (\x_1 -> \x_2 -> if (x_2) == (0) then "........................................................................................................................................................................................................" else ((x_1) ((x_2) `quot` (4))) ++ ((1) `take` (((x_2) `rem` (4)) `drop` (".\n#L"))))) bigNum
+lamman21 = (fix f) bigNum
+  where
+    f = (\recur -> \x_2 ->
+            if (x_2) == (0)
+              then "........................................................................................................................................................................................................"
+              else (recur (x_2 `quot` 4)) ++ (1 `take` ((x_2 `rem` 4) `drop` (".\n#L"))))
 
 bigNum :: Int
 bigNum = 2 ^ 20 + 1 

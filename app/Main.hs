@@ -1,6 +1,6 @@
 module Main where
 
-import Efficiency
+import LambdaMan
 
 main :: IO ()
-main = print e3
+main = solveLambdaman 21

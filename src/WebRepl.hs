@@ -9,6 +9,8 @@ import Network.HTTP.Req
 import StringMap
 import System.Console.Isocline (readline)
 import Eval
+import HOAS
+import Data.ByteString (ByteString)
 
 repl :: IO ()
 repl = do
@@ -23,24 +25,19 @@ repl = do
       repl
 
 sendMessage :: String -> IO String
--- You can either make your monad an instance of 'MonadHttp', or use
--- 'runReq' in any IO-enabled monad without defining new instances.
 sendMessage message = runReq defaultHttpConfig $ do
   let payload = fromString ('S' : (toIcfpString message))
 
-  -- One function—full power and flexibility, automatic retrying on timeouts
-  -- and such, automatic connection sharing.
   r <-
     req
-      POST -- method
-      (https "boundvariable.space" /: "communicate") -- safe by construction URL
-      (ReqBodyBs payload) -- use built-in options or add your own
-      bsResponse -- specify how to interpret response
-      (header "Authorization" "Bearer 3e6b791a-a998-49db-9ec6-ddc017323fc0") -- query params, headers, explicit port number, etc.
+      POST
+      (https "boundvariable.space" /: "communicate")
+      (ReqBodyBs payload)
+      bsResponse
+      (header "Authorization" "Bearer 3e6b791a-a998-49db-9ec6-ddc017323fc0")
 
   r |> responseBody
     |> toString
-    -- |> Prelude.tail
     |> evalStr @String
     |> liftIO
 
@@ -57,20 +54,20 @@ replDebug = do
       replDebug
 
 sendMessageDebug :: String -> IO String
--- You can either make your monad an instance of 'MonadHttp', or use
--- 'runReq' in any IO-enabled monad without defining new instances.
-sendMessageDebug message = runReq defaultHttpConfig $ do
-  let payload = fromString ('S' : (toIcfpString message))
+sendMessageDebug message = sendDebug (fromString ('S' : (toIcfpString message)))
 
-  -- One function—full power and flexibility, automatic retrying on timeouts
-  -- and such, automatic connection sharing.
+sendHOASe :: HOASe String -> IO String
+sendHOASe hoas = sendDebug (fromString $ hoasToStr hoas)
+
+sendDebug :: ByteString -> IO String
+sendDebug payload = runReq defaultHttpConfig $ do
   r <-
     req
       POST -- method
-      (https "boundvariable.space" /: "communicate") -- safe by construction URL
-      (ReqBodyBs payload) -- use built-in options or add your own
-      bsResponse -- specify how to interpret response
-      (header "Authorization" "Bearer 3e6b791a-a998-49db-9ec6-ddc017323fc0") -- query params, headers, explicit port number, etc.
+      (https "boundvariable.space" /: "communicate")
+      (ReqBodyBs payload)
+      bsResponse
+      (header "Authorization" "Bearer 3e6b791a-a998-49db-9ec6-ddc017323fc0")
 
   let res = r |> responseBody
               |> toString

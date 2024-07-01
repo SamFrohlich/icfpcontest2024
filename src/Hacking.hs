@@ -7,9 +7,7 @@ import qualified Data.Map as M
 import NumberMap
 import StringMap
 
-import Debug.Trace
-
-import AST (UOp(..), BOp(..))
+import AST (UOp(..), BOp(..), astToStr)
 import AST qualified
 import Data.List (foldl')
 import Flow
@@ -20,12 +18,18 @@ program = "? B= B$ B$ B$ B$ L$ L$ L$ L# v$ I\" I# I$ I% I$ ? B= B$ L$ v$ I+ I+ ?
 lambdaEg :: String
 lambdaEg = "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK"
 
+ifEg :: AST.ICFP Integer
+ifEg = strToAST "? B> I# I$ S9%3 S./"
+
 
 strToAST :: String -> AST.ICFP Integer
 strToAST = toICFP .> toAST
 
 -- >>> strToAST lambdaEg
 -- B App (B App (L 2 (L 3 (V 2))) (B Cat (S "Hello") (S " World!"))) (I 42)
+
+rountTripAST :: String -> String
+rountTripAST str = str |> strToAST |> astToStr
 
 data ICFP =
   T | F

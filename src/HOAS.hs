@@ -10,6 +10,7 @@ import Data.Map.Strict (Map)
 import Data.Dynamic (Dynamic, Typeable)
 import Eval (evalTo)
 import Flow
+import AST (astToStr)
 
 ------------------------------------------------------
 -- HOAS
@@ -147,6 +148,8 @@ instance HOAS HOASe where
   -- recursion
   fix = Fix
 
+hoasToStr :: HOASe a -> String
+hoasToStr = hoasToAST .> astToStr
 
 hoasToAST :: HOASe a -> AST.ICFP Integer
 hoasToAST = go 1

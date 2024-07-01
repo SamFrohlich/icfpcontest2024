@@ -9,6 +9,9 @@ import Data.Char (isDigit, isSpace)
 import Control.Monad (void)
 import Spaceships
 import Flow
+import RLE (rleString)
+import qualified HOAS as H
+import AST (printAST)
 
 solveSpaceship :: Int -> IO ()
 solveSpaceship n = do
@@ -22,6 +25,21 @@ solveSpaceship n = do
         ]
   res' <- sendMessage msg'
   print res'
+
+solveSpaceshipRLE :: Integer -> Int -> IO ()
+solveSpaceshipRLE digs n = do
+  let msg = "get spaceship" ++ show n
+  res <- sendMessage msg
+
+  let solution = rleString digs $ processResponse res
+  -- putStrLn "ICFP code sent:"
+  -- print $ H.hoasToStr solution
+  -- putStrLn "Haskell-style translation:"
+  -- printAST $ H.hoasToAST solution
+  -- putStrLn "decoded solution:"
+  -- print =<< H.evalHOASe solution
+  res2 <- WebRepl.sendHOASe $ H.s ("solve spaceship" ++ show n ++ " ") H.++ solution
+  print res2
 
 processResponse :: String -> String
 processResponse
